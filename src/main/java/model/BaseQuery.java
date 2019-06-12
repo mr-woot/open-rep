@@ -55,4 +55,15 @@ public class BaseQuery {
     public void setEventType(String eventType) {
         this.eventType = eventType;
     }
+
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder("BaseQuery{");
+        sb.append("tableName='").append(tableName).append('\'');
+        sb.append(", databaseName='").append(databaseName).append('\'');
+        sb.append(", timestamp=").append(timestamp);
+        sb.append(", eventType='").append(eventType).append('\'');
+        sb.append('}');
+        return sb.toString();
+    }
 }

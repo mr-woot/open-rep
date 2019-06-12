@@ -32,14 +32,14 @@ public class SpyWorkApplication {
         or.setPort(3306);
         or.setServerId(1);
         or.setBinlogPosition(4);
-        or.setBinlogFileName("bin.000014");
+        or.setBinlogFileName("bin.000011");
 
         /*
          * Fill table schema into in-memory
          */
         SchemaMap map = new SchemaMap();
         map.fillTableSchema();
-        System.out.println(new Gson().toJson(SchemaMap.schemaTableDataTypeMap));
+        System.out.println(new Gson().toJson(SchemaMap.schemaTableMap));
 
         or.setBinlogEventListener(new BinlogEventListener() {
             public void onEvents(BinlogEventV4 event) {

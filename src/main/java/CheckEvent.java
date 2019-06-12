@@ -9,10 +9,10 @@ import com.google.code.or.common.util.MySQLConstants;
 import constants.DatabaseMappings;
 import constants.TableMappings;
 import model.BaseQuery;
-import model.InsertQuery;
+import model.InsertDeleteQuery;
+import model.SchemaMapBean;
+import model.UpdateQuery;
 import util.SchemaMap;
-
-import static util.SchemaMap.schemaTableDataTypeMap;
 
 public class CheckEvent {
     static String databaseName;
@@ -37,17 +37,38 @@ public class CheckEvent {
                  */
                 case MySQLConstants.QUERY_EVENT: {
                     QueryEvent queryEvent = (QueryEvent) event;
-//                    String query = queryEvent.getSql().toString().trim().toLowerCase();
-//                    System.out.println(query);
-                    // ## Build response that needs to be send to kafka.
 
-                    /*
-                     * ## Send queryEvent to kafka topic of type
-                     * {
-                     *      type: <insert | update | delete | {alter, rename, create}>
-                     *
-                     * }
-                     */
+                    // get query statement
+                    // check if its alter, create or rename
+                    //
+                    String sqlQuery = queryEvent.getSql().toString().trim().toLowerCase();
+
+                    sqlQuery= sqlQuery.replaceAll("\\s\\s*", " ");
+                    sqlQuery = sqlQuery.replace("(", " ");
+                    sqlQuery = sqlQuery.replace("if not exists ", "");
+
+                    // no need for removing ")"
+                    // sqlQuery = sqlQuery.replace(")", " ");
+
+                    sqlQuery= sqlQuery.replaceAll("\\s\\s*", " ");
+
+                    SchemaMap schemaMap = new SchemaMap();
+
+                    if (sqlQuery.startsWith("create")) {
+                        schemaMap.fillTableWiseSchema(queryEvent.getDatabaseName().toString(), sqlQuery.split(" ")[2]);
+//                        System.out.println(sqlQuery.split(" ")[2]);
+                    } else if (sqlQuery.startsWith("alter")) {
+                        schemaMap.fillTableWiseSchema(queryEvent.getDatabaseName().toString(), sqlQuery.split(" ")[2]);
+//                        System.out.println(sqlQuery.split(" ")[2]);
+                    } else if (sqlQuery.startsWith("rename")) {
+                        schemaMap.fillTableWiseSchema(queryEvent.getDatabaseName().toString(), sqlQuery.split(" ")[2]);
+//                        System.out.println(sqlQuery.split(" ")[2]);
+                    } else {
+//                        System.out.println("Other queries");
+                    }
+
+                    // ## Build response that needs to be send to kafka.
+                    // ## Send queryEvent to kafka topic of type
                     break;
                 }
                 /*
@@ -73,14 +94,15 @@ public class CheckEvent {
                     // set insert flag true
                     if (DatabaseMappings.databaseNamesList.get(databaseName) != null) {
                         WriteRowsEventV2 writeRowsEventV2 = (WriteRowsEventV2) event;
-                        binlogFileName = ((WriteRowsEventV2) event).getBinlogFilename();
-                        binlogPosition = event.getHeader().getNextPosition();
-                        String tableName = TableMappings.getTableName(((WriteRowsEventV2) event).getTableId());
-//                        String kafkaTopic = TableMappings.getKafkaTopic(((WriteRowsEventV2) event).getTableId());
+                        binlogFileName = writeRowsEventV2.getBinlogFilename();
+                        binlogPosition = writeRowsEventV2.getHeader().getNextPosition();
+                        String tableName = TableMappings.getTableName(writeRowsEventV2.getTableId());
+                        String kafkaTopic = TableMappings.getKafkaTopic(writeRowsEventV2.getTableId());
 //                        if (kafkaTopic != null) {
 //                            System.out.println("Produced to kafka with topic: " + kafkaTopic);
                             BaseQuery baseQuery = new BaseQuery(tableName, databaseName, "insert", event.getHeader().getTimestamp());
-                            InsertQuery.buildResponse(writeRowsEventV2, baseQuery, false);
+                            new InsertDeleteQuery().buildResponse(writeRowsEventV2, baseQuery);
+                            insertFlag = true;
                             // ## Send writeRowsEventV2 to kafka topic <?>
 //                        }
                     }
@@ -90,8 +112,21 @@ public class CheckEvent {
                  * Update rows event
                  */
                 case MySQLConstants.UPDATE_ROWS_EVENT_V2: {
-                    UpdateRowsEventV2 updateRowsEventV2 = (UpdateRowsEventV2) event;
-//                    System.out.println("ure--" + updateRowsEventV2);
+                    if (DatabaseMappings.databaseNamesList.get(databaseName) != null) {
+                        UpdateRowsEventV2 updateRowsEventV2 = (UpdateRowsEventV2) event;
+                        binlogFileName = updateRowsEventV2.getBinlogFilename();
+                        binlogPosition = updateRowsEventV2.getHeader().getNextPosition();
+                        String tableName = TableMappings.getTableName(updateRowsEventV2.getTableId());
+                        String kafkaTopic = TableMappings.getKafkaTopic(updateRowsEventV2.getTableId());
+//                        if (kafkaTopic != null) {
+//                            System.out.println("Produced to kafka with topic: " + kafkaTopic);
+                        BaseQuery baseQuery = new BaseQuery(tableName, databaseName, "update", updateRowsEventV2.getHeader().getTimestamp());
+                        UpdateQuery.buildResponse(updateRowsEventV2, baseQuery);
+                        insertFlag = true;
+                        // ## Send writeRowsEventV2 to kafka topic <?>
+//                        }
+                    }
+
                     // ## Send writeRowsEventV2 to kafka topic <?>
                     break;
                 }
@@ -99,8 +134,20 @@ public class CheckEvent {
                  * Delete row event
                  */
                 case MySQLConstants.DELETE_ROWS_EVENT_V2: {
-                    DeleteRowsEventV2 deleteRowsEvent = (DeleteRowsEventV2) event;
-//                    System.out.println("dre--" + deleteRowsEvent);
+                    if (DatabaseMappings.databaseNamesList.get(databaseName) != null) {
+                        DeleteRowsEventV2 deleteRowsEvent = (DeleteRowsEventV2) event;
+                        binlogFileName = deleteRowsEvent.getBinlogFilename();
+                        binlogPosition = deleteRowsEvent.getHeader().getNextPosition();
+                        String tableName = TableMappings.getTableName(deleteRowsEvent.getTableId());
+                        String kafkaTopic = TableMappings.getKafkaTopic(deleteRowsEvent.getTableId());
+//                        if (kafkaTopic != null) {
+//                            System.out.println("Produced to kafka with topic: " + kafkaTopic);
+                        BaseQuery baseQuery = new BaseQuery(tableName, databaseName, "delete", event.getHeader().getTimestamp());
+                        new InsertDeleteQuery().buildResponse(deleteRowsEvent, baseQuery);
+                        insertFlag = true;
+                        // ## Send writeRowsEventV2 to kafka topic <?>
+//                        }
+                    }
                     // ## Send deleteRowsEvent to kafka topic <?>
                     break;
                 }

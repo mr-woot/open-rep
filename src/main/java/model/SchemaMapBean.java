@@ -38,4 +38,14 @@ public class SchemaMapBean implements Serializable {
     public void setDataType(String dataType) {
         this.dataType = dataType;
     }
+
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder("SchemaMapBean{");
+        sb.append("position=").append(position);
+        sb.append(", columnName='").append(columnName).append('\'');
+        sb.append(", dataType='").append(dataType).append('\'');
+        sb.append('}');
+        return sb.toString();
+    }
 }
