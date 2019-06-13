@@ -2,19 +2,12 @@ import com.google.code.or.OpenReplicator;
 import com.google.code.or.binlog.BinlogEventListener;
 import com.google.code.or.binlog.BinlogEventV4;
 import com.google.gson.Gson;
-import conn.DataSource;
 import constants.DatabaseMappings;
-import util.ConfigBundle;
 import util.SchemaMap;
+import util.RedisUtils;
 
-import javax.xml.crypto.Data;
-import java.awt.image.DataBuffer;
-import java.beans.PropertyVetoException;
 import java.io.BufferedReader;
-import java.io.IOException;
 import java.io.InputStreamReader;
-import java.sql.Connection;
-import java.sql.SQLException;
 
 /**
  * Contributed By: Tushar Mudgal
@@ -22,17 +15,25 @@ import java.sql.SQLException;
  */
 public class SpyWorkApplication {
     public static void main(String[] args) {
+        // get binlogPosition and binlogFilename from redis and put it
+        // into open replicator constructor.
+        Long binlogPosition = RedisUtils.getBinlogPosition();
+        String binlogFileName = RedisUtils.getBinlogFileName();
+
         // Fill database mappings
         DatabaseMappings.fillDatabaseMappings();
 
+        /*
+         * Initialize Open Replicator with configs
+         */
         final OpenReplicator or = new OpenReplicator();
         or.setUser("tushar");
         or.setPassword("tushar@123");
         or.setHost("localhost");
         or.setPort(3306);
         or.setServerId(1);
-        or.setBinlogPosition(4);
-        or.setBinlogFileName("bin.000011");
+        or.setBinlogPosition(binlogPosition);
+        or.setBinlogFileName(binlogFileName);
 
         /*
          * Fill table schema into in-memory

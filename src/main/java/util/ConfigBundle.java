@@ -14,17 +14,17 @@ public class ConfigBundle {
      * @return ResourceBundle
      */
     private static ResourceBundle getInstance(){
-        if(resourceBundle==null){
+        if (resourceBundle == null) {
             resourceBundle = ResourceBundle.getBundle("config");
         }
         return resourceBundle;
     }
+
     /**
      *
      * @return config value based on key
      */
-    public static String getValue(String key){
-
+    public static String getValue(String key) {
         return ConfigBundle.getInstance().getString(key);
     }
 }

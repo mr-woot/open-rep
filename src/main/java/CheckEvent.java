@@ -8,12 +8,14 @@ import com.google.code.or.binlog.impl.event.*;
 import com.google.code.or.common.util.MySQLConstants;
 import constants.DatabaseMappings;
 import constants.TableMappings;
+import lombok.extern.log4j.Log4j;
 import model.BaseQuery;
 import model.InsertDeleteQuery;
-import model.SchemaMapBean;
 import model.UpdateQuery;
 import util.SchemaMap;
+import util.RedisUtils;
 
+@Log4j
 public class CheckEvent {
     static String databaseName;
 
@@ -27,7 +29,7 @@ public class CheckEvent {
 
         try {
             if (event == null) {
-                System.out.println("Event is null");
+                log.error("Event is empty");
                 return;
             }
             int eventType = event.getHeader().getEventType();
@@ -40,7 +42,6 @@ public class CheckEvent {
 
                     // get query statement
                     // check if its alter, create or rename
-                    //
                     String sqlQuery = queryEvent.getSql().toString().trim().toLowerCase();
 
                     sqlQuery= sqlQuery.replaceAll("\\s\\s*", " ");
@@ -56,15 +57,12 @@ public class CheckEvent {
 
                     if (sqlQuery.startsWith("create")) {
                         schemaMap.fillTableWiseSchema(queryEvent.getDatabaseName().toString(), sqlQuery.split(" ")[2]);
-//                        System.out.println(sqlQuery.split(" ")[2]);
                     } else if (sqlQuery.startsWith("alter")) {
                         schemaMap.fillTableWiseSchema(queryEvent.getDatabaseName().toString(), sqlQuery.split(" ")[2]);
-//                        System.out.println(sqlQuery.split(" ")[2]);
                     } else if (sqlQuery.startsWith("rename")) {
                         schemaMap.fillTableWiseSchema(queryEvent.getDatabaseName().toString(), sqlQuery.split(" ")[2]);
-//                        System.out.println(sqlQuery.split(" ")[2]);
                     } else {
-//                        System.out.println("Other queries");
+
                     }
 
                     // ## Build response that needs to be send to kafka.
@@ -153,13 +151,19 @@ public class CheckEvent {
                 }
                 case MySQLConstants.ROTATE_EVENT: {
                     RotateEvent rotateEvent = (RotateEvent) event;
-//                    System.out.println("re--" + rotateEvent);
-                    // ## Insert into redis the last binLogFile position and filename
+                    binlogFileName = rotateEvent.getBinlogFileName().toString();
+                    binlogPosition = rotateEvent.getBinlogPosition();
+                    rotateEventFlag = true;
                     break;
                 }
             }
         } catch (Exception e) {
             System.out.println("Error Ocurred in getEvent method switch case block " + e);
+        } finally {
+            if (insertFlag || rotateEventFlag) {
+                RedisUtils.setBinlogFileName(binlogFileName);
+                RedisUtils.setBinlogPosition(binlogPosition);
+            }
         }
     }
 }
