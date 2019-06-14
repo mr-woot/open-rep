@@ -15,7 +15,7 @@ import java.util.*;
  * On: 11/6/19 | 3:59 PM
  */
 public class InsertDeleteQuery {
-    private void build(Iterator<Row> rows, BaseQuery base) throws NullPointerException {
+    private String build(Iterator<Row> rows, BaseQuery base) throws NullPointerException {
         List<Column> column = null;
         HashMap<String, Object> map = null;
 
@@ -35,13 +35,13 @@ public class InsertDeleteQuery {
         } catch (Exception e) {
 //            e.printStackTrace();
         }
-        System.out.println(new JSONObject(map));
+        return new JSONObject(map).toString();
     }
-    public void buildResponse(WriteRowsEventV2 event, BaseQuery base) {
-        this.build(event.getRows().listIterator(), base);
+    public String buildResponse(WriteRowsEventV2 event, BaseQuery base) {
+        return this.build(event.getRows().listIterator(), base);
     }
-    public void buildResponse(DeleteRowsEventV2 event, BaseQuery base) {
-        this.build(event.getRows().listIterator(), base);
+    public String buildResponse(DeleteRowsEventV2 event, BaseQuery base) {
+        return this.build(event.getRows().listIterator(), base);
     }
 
 }

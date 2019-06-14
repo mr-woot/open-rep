@@ -6,20 +6,21 @@
 import com.google.code.or.binlog.BinlogEventV4;
 import com.google.code.or.binlog.impl.event.*;
 import com.google.code.or.common.util.MySQLConstants;
-import constants.DatabaseMappings;
 import constants.TableMappings;
 import lombok.extern.log4j.Log4j;
 import model.BaseQuery;
 import model.InsertDeleteQuery;
 import model.UpdateQuery;
-import util.SchemaMap;
+import util.KafkaUtils;
 import util.RedisUtils;
+import util.SchemaMap;
 
 @Log4j
 public class CheckEvent {
     static String databaseName;
 
-    public CheckEvent() { }
+    public CheckEvent() {
+    }
 
     public static void getEvent(BinlogEventV4 event) {
         String binlogFileName = "";
@@ -44,14 +45,14 @@ public class CheckEvent {
                     // check if its alter, create or rename
                     String sqlQuery = queryEvent.getSql().toString().trim().toLowerCase();
 
-                    sqlQuery= sqlQuery.replaceAll("\\s\\s*", " ");
+                    sqlQuery = sqlQuery.replaceAll("\\s\\s*", " ");
                     sqlQuery = sqlQuery.replace("(", " ");
                     sqlQuery = sqlQuery.replace("if not exists ", "");
 
                     // no need for removing ")"
                     // sqlQuery = sqlQuery.replace(")", " ");
 
-                    sqlQuery= sqlQuery.replaceAll("\\s\\s*", " ");
+                    sqlQuery = sqlQuery.replaceAll("\\s\\s*", " ");
 
                     SchemaMap schemaMap = new SchemaMap();
 
@@ -61,8 +62,6 @@ public class CheckEvent {
                         schemaMap.fillTableWiseSchema(queryEvent.getDatabaseName().toString(), sqlQuery.split(" ")[2]);
                     } else if (sqlQuery.startsWith("rename")) {
                         schemaMap.fillTableWiseSchema(queryEvent.getDatabaseName().toString(), sqlQuery.split(" ")[2]);
-                    } else {
-
                     }
 
                     // ## Build response that needs to be send to kafka.
@@ -90,63 +89,60 @@ public class CheckEvent {
                     // get kafkaTopicMappings according to tableId
                     // if kafkaTopic exists, then produce to kafka the generated response.
                     // set insert flag true
-                    if (DatabaseMappings.databaseNamesList.get(databaseName) != null) {
-                        WriteRowsEventV2 writeRowsEventV2 = (WriteRowsEventV2) event;
-                        binlogFileName = writeRowsEventV2.getBinlogFilename();
-                        binlogPosition = writeRowsEventV2.getHeader().getNextPosition();
-                        String tableName = TableMappings.getTableName(writeRowsEventV2.getTableId());
-                        String kafkaTopic = TableMappings.getKafkaTopic(writeRowsEventV2.getTableId());
+//                    if (DatabaseMappings.databaseNamesList.get(databaseName) != null) {
+                    WriteRowsEventV2 writeRowsEventV2 = (WriteRowsEventV2) event;
+                    binlogFileName = writeRowsEventV2.getBinlogFilename();
+                    binlogPosition = writeRowsEventV2.getHeader().getNextPosition();
+                    String tableName = TableMappings.getTableName(writeRowsEventV2.getTableId());
+                    String kafkaTopic = TableMappings.getKafkaTopic(writeRowsEventV2.getTableId());
 //                        if (kafkaTopic != null) {
 //                            System.out.println("Produced to kafka with topic: " + kafkaTopic);
-                            BaseQuery baseQuery = new BaseQuery(tableName, databaseName, "insert", event.getHeader().getTimestamp());
-                            new InsertDeleteQuery().buildResponse(writeRowsEventV2, baseQuery);
-                            insertFlag = true;
-                            // ## Send writeRowsEventV2 to kafka topic <?>
+                    BaseQuery baseQuery = new BaseQuery(tableName, databaseName, "insert", event.getHeader().getTimestamp());
+                    String response = new InsertDeleteQuery().buildResponse(writeRowsEventV2, baseQuery);
+                    KafkaUtils.sendMessage("com.paisabzaar.core.open-replicator-test", response);
+                    insertFlag = true;
 //                        }
-                    }
+//                    }
                     break;
                 }
                 /*
                  * Update rows event
                  */
                 case MySQLConstants.UPDATE_ROWS_EVENT_V2: {
-                    if (DatabaseMappings.databaseNamesList.get(databaseName) != null) {
-                        UpdateRowsEventV2 updateRowsEventV2 = (UpdateRowsEventV2) event;
-                        binlogFileName = updateRowsEventV2.getBinlogFilename();
-                        binlogPosition = updateRowsEventV2.getHeader().getNextPosition();
-                        String tableName = TableMappings.getTableName(updateRowsEventV2.getTableId());
-                        String kafkaTopic = TableMappings.getKafkaTopic(updateRowsEventV2.getTableId());
+//                    if (DatabaseMappings.databaseNamesList.get(databaseName) != null) {
+                    UpdateRowsEventV2 updateRowsEventV2 = (UpdateRowsEventV2) event;
+                    binlogFileName = updateRowsEventV2.getBinlogFilename();
+                    binlogPosition = updateRowsEventV2.getHeader().getNextPosition();
+                    String tableName = TableMappings.getTableName(updateRowsEventV2.getTableId());
+                    String kafkaTopic = TableMappings.getKafkaTopic(updateRowsEventV2.getTableId());
 //                        if (kafkaTopic != null) {
 //                            System.out.println("Produced to kafka with topic: " + kafkaTopic);
-                        BaseQuery baseQuery = new BaseQuery(tableName, databaseName, "update", updateRowsEventV2.getHeader().getTimestamp());
-                        UpdateQuery.buildResponse(updateRowsEventV2, baseQuery);
-                        insertFlag = true;
-                        // ## Send writeRowsEventV2 to kafka topic <?>
+                    BaseQuery baseQuery = new BaseQuery(tableName, databaseName, "update", updateRowsEventV2.getHeader().getTimestamp());
+                    String response = UpdateQuery.buildResponse(updateRowsEventV2, baseQuery);
+                    KafkaUtils.sendMessage("com.paisabzaar.core.open-replicator-test", response);
+                    insertFlag = true;
 //                        }
-                    }
-
-                    // ## Send writeRowsEventV2 to kafka topic <?>
+//                    }
                     break;
                 }
                 /*
                  * Delete row event
                  */
                 case MySQLConstants.DELETE_ROWS_EVENT_V2: {
-                    if (DatabaseMappings.databaseNamesList.get(databaseName) != null) {
-                        DeleteRowsEventV2 deleteRowsEvent = (DeleteRowsEventV2) event;
-                        binlogFileName = deleteRowsEvent.getBinlogFilename();
-                        binlogPosition = deleteRowsEvent.getHeader().getNextPosition();
-                        String tableName = TableMappings.getTableName(deleteRowsEvent.getTableId());
-                        String kafkaTopic = TableMappings.getKafkaTopic(deleteRowsEvent.getTableId());
+//                    if (DatabaseMappings.databaseNamesList.get(databaseName) != null) {
+                    DeleteRowsEventV2 deleteRowsEvent = (DeleteRowsEventV2) event;
+                    binlogFileName = deleteRowsEvent.getBinlogFilename();
+                    binlogPosition = deleteRowsEvent.getHeader().getNextPosition();
+                    String tableName = TableMappings.getTableName(deleteRowsEvent.getTableId());
+                    String kafkaTopic = TableMappings.getKafkaTopic(deleteRowsEvent.getTableId());
 //                        if (kafkaTopic != null) {
 //                            System.out.println("Produced to kafka with topic: " + kafkaTopic);
-                        BaseQuery baseQuery = new BaseQuery(tableName, databaseName, "delete", event.getHeader().getTimestamp());
-                        new InsertDeleteQuery().buildResponse(deleteRowsEvent, baseQuery);
-                        insertFlag = true;
-                        // ## Send writeRowsEventV2 to kafka topic <?>
+                    BaseQuery baseQuery = new BaseQuery(tableName, databaseName, "delete", event.getHeader().getTimestamp());
+                    String response = new InsertDeleteQuery().buildResponse(deleteRowsEvent, baseQuery);
+                    KafkaUtils.sendMessage("com.paisabzaar.core.open-replicator-test", response);
+                    insertFlag = true;
 //                        }
-                    }
-                    // ## Send deleteRowsEvent to kafka topic <?>
+//                    }
                     break;
                 }
                 case MySQLConstants.ROTATE_EVENT: {
@@ -161,8 +157,8 @@ public class CheckEvent {
             System.out.println("Error Ocurred in getEvent method switch case block " + e);
         } finally {
             if (insertFlag || rotateEventFlag) {
-                RedisUtils.setBinlogFileName(binlogFileName);
-                RedisUtils.setBinlogPosition(binlogPosition);
+//                RedisUtils.setBinlogFileName(binlogFileName);
+//                RedisUtils.setBinlogPosition(binlogPosition);
             }
         }
     }
