@@ -1,0 +1,15 @@
+util/KafkaUtils.class
+util/RedisUtils.class
+conn/Redis.class
+constants/DatabaseMappings.class
+model/BaseQuery.class
+model/SchemaMapBean.class
+CheckEvent.class
+model/InsertDeleteQuery.class
+model/UpdateQuery.class
+constants/TableMappings.class
+conn/Kafka.class
+util/ConfigBundle.class
+conn/DataSource.class
+SpyWorkApplication.class
+util/SchemaMap.class

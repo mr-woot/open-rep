@@ -1,0 +1,15 @@
+/home/tushar/Documents/poc/spywork/src/main/java/constants/DatabaseMappings.java
+/home/tushar/Documents/poc/spywork/src/main/java/util/KafkaUtils.java
+/home/tushar/Documents/poc/spywork/src/main/java/conn/DataSource.java
+/home/tushar/Documents/poc/spywork/src/main/java/conn/Kafka.java
+/home/tushar/Documents/poc/spywork/src/main/java/model/UpdateQuery.java
+/home/tushar/Documents/poc/spywork/src/main/java/util/SchemaMap.java
+/home/tushar/Documents/poc/spywork/src/main/java/conn/Redis.java
+/home/tushar/Documents/poc/spywork/src/main/java/constants/TableMappings.java
+/home/tushar/Documents/poc/spywork/src/main/java/util/ConfigBundle.java
+/home/tushar/Documents/poc/spywork/src/main/java/model/BaseQuery.java
+/home/tushar/Documents/poc/spywork/src/main/java/CheckEvent.java
+/home/tushar/Documents/poc/spywork/src/main/java/SpyWorkApplication.java
+/home/tushar/Documents/poc/spywork/src/main/java/model/InsertDeleteQuery.java
+/home/tushar/Documents/poc/spywork/src/main/java/util/RedisUtils.java
+/home/tushar/Documents/poc/spywork/src/main/java/model/SchemaMapBean.java
