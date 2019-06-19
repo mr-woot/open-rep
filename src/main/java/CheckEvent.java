@@ -8,6 +8,7 @@ import com.google.code.or.binlog.impl.event.*;
 import com.google.code.or.common.util.MySQLConstants;
 import constants.TableMappings;
 import lombok.extern.log4j.Log4j;
+import model.AlterCreateRenameQuery;
 import model.BaseQuery;
 import model.InsertDeleteQuery;
 import model.UpdateQuery;
@@ -40,32 +41,24 @@ public class CheckEvent {
                  */
                 case MySQLConstants.QUERY_EVENT: {
                     QueryEvent queryEvent = (QueryEvent) event;
-
+                    databaseName = queryEvent.getDatabaseName().toString();
                     // get query statement
                     // check if its alter, create or rename
                     String sqlQuery = queryEvent.getSql().toString().trim().toLowerCase();
-
                     sqlQuery = sqlQuery.replaceAll("\\s\\s*", " ");
                     sqlQuery = sqlQuery.replace("(", " ");
                     sqlQuery = sqlQuery.replace("if not exists ", "");
-
                     // no need for removing ")"
                     // sqlQuery = sqlQuery.replace(")", " ");
-
                     sqlQuery = sqlQuery.replaceAll("\\s\\s*", " ");
-
                     SchemaMap schemaMap = new SchemaMap();
-
                     if (sqlQuery.startsWith("create")) {
-                        schemaMap.fillTableWiseSchema(queryEvent.getDatabaseName().toString(), sqlQuery.split(" ")[2]);
+                        sendDdlToKafka(event, queryEvent, sqlQuery, schemaMap, "create");
                     } else if (sqlQuery.startsWith("alter")) {
-                        schemaMap.fillTableWiseSchema(queryEvent.getDatabaseName().toString(), sqlQuery.split(" ")[2]);
+                        sendDdlToKafka(event, queryEvent, sqlQuery, schemaMap, "alter");
                     } else if (sqlQuery.startsWith("rename")) {
-                        schemaMap.fillTableWiseSchema(queryEvent.getDatabaseName().toString(), sqlQuery.split(" ")[2]);
+                        sendDdlToKafka(event, queryEvent, sqlQuery, schemaMap, "rename");
                     }
-
-                    // ## Build response that needs to be send to kafka.
-                    // ## Send queryEvent to kafka topic of type
                     break;
                 }
                 /*
@@ -161,5 +154,14 @@ public class CheckEvent {
 //                RedisUtils.setBinlogPosition(binlogPosition);
             }
         }
+    }
+
+    private static void sendDdlToKafka(BinlogEventV4 event, QueryEvent queryEvent, String sqlQuery, SchemaMap schemaMap, String create) {
+        BaseQuery baseQuery;
+        String tableName = sqlQuery.split(" ")[2];
+        schemaMap.fillTableWiseSchema(queryEvent.getDatabaseName().toString(), tableName);
+        baseQuery = new BaseQuery(tableName, databaseName, create, event.getHeader().getTimestamp());
+        String response = AlterCreateRenameQuery.buildResponse(queryEvent, baseQuery);
+        KafkaUtils.sendMessage("com.paisabzaar.core.open-replicator-test-ddl", response);
     }
 }
