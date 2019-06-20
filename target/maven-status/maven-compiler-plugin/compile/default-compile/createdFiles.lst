@@ -1,4 +1,5 @@
 util/KafkaUtils.class
+model/AlterCreateRenameQuery.class
 util/RedisUtils.class
 conn/Redis.class
 constants/DatabaseMappings.class

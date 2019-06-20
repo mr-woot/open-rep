@@ -11,7 +11,7 @@ import org.apache.kafka.clients.producer.ProducerRecord;
 @Log4j
 public class KafkaUtils {
     public static void sendMessage(String topic, String message) {
-        Kafka.producer.send(new ProducerRecord<String, String>(topic, message));
+//        Kafka.producer.send(new ProducerRecord<String, String>(topic, message));
         log.info("Message produced: " + message);
     }
 }

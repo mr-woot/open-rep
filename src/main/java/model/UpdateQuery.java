@@ -4,6 +4,7 @@ import com.google.code.or.binlog.impl.event.UpdateRowsEventV2;
 import com.google.code.or.common.glossary.Column;
 import com.google.code.or.common.glossary.Pair;
 import com.google.code.or.common.glossary.Row;
+import com.google.gson.Gson;
 import org.json.JSONException;
 import org.json.JSONObject;
 import util.SchemaMap;
@@ -38,17 +39,21 @@ public class UpdateQuery {
                 map = SchemaMap.setDefaultValues(map, base);
 
                 JSONObject dataObject = new JSONObject();
-                JSONObject beforeMap = new JSONObject();
-                JSONObject afterMap = new JSONObject();
+                JSONObject bMap = new JSONObject();
+                JSONObject aMap = new JSONObject();
+                Gson beforeMap = new Gson();
+                Gson afterMap = new Gson();
 
                 for (int i = 0; i < before.size(); i++) {
                     SchemaMapBean dataMap = (SchemaMapBean) tableSchema.get(i);
-                    beforeMap.put(dataMap.columnName, before.get(i));
-                    afterMap.put(dataMap.columnName, after.get(i));
+                    bMap.put(dataMap.columnName, beforeMap.toJson(before.get(i)));
+                    aMap.put(dataMap.columnName, afterMap.toJson(after.get(i)));
+//                    beforeMap.put(dataMap.columnName, before.get(i).getValue());
+//                    afterMap.put(dataMap.columnName, after.get(i).getValue());
                 }
 
-                dataObject.put("before", beforeMap);
-                dataObject.put("after", afterMap);
+                dataObject.put("before", bMap);
+                dataObject.put("after", aMap);
                 map.put("data", dataObject);
             }
         } catch (JSONException e) {

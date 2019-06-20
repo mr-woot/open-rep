@@ -1,6 +1,7 @@
 /home/tushar/Documents/poc/spywork/src/main/java/constants/DatabaseMappings.java
 /home/tushar/Documents/poc/spywork/src/main/java/util/KafkaUtils.java
 /home/tushar/Documents/poc/spywork/src/main/java/conn/DataSource.java
+/home/tushar/Documents/poc/spywork/src/main/java/model/AlterCreateRenameQuery.java
 /home/tushar/Documents/poc/spywork/src/main/java/conn/Kafka.java
 /home/tushar/Documents/poc/spywork/src/main/java/model/UpdateQuery.java
 /home/tushar/Documents/poc/spywork/src/main/java/util/SchemaMap.java

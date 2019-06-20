@@ -75,13 +75,6 @@ public class CheckEvent {
                  * Create (Write) rows event
                  */
                 case MySQLConstants.WRITE_ROWS_EVENT_V2: {
-                    // check if database_name is in the required ones
-                    // get binlogFileName
-                    // get binlogPosition
-                    // get tableName according to tableId
-                    // get kafkaTopicMappings according to tableId
-                    // if kafkaTopic exists, then produce to kafka the generated response.
-                    // set insert flag true
 //                    if (DatabaseMappings.databaseNamesList.get(databaseName) != null) {
                     WriteRowsEventV2 writeRowsEventV2 = (WriteRowsEventV2) event;
                     binlogFileName = writeRowsEventV2.getBinlogFilename();
@@ -92,7 +85,7 @@ public class CheckEvent {
 //                            System.out.println("Produced to kafka with topic: " + kafkaTopic);
                     BaseQuery baseQuery = new BaseQuery(tableName, databaseName, "insert", event.getHeader().getTimestamp());
                     String response = new InsertDeleteQuery().buildResponse(writeRowsEventV2, baseQuery);
-                    KafkaUtils.sendMessage("com.paisabzaar.core.open-replicator-test", response);
+                    KafkaUtils.sendMessage("com.paisabazaar.core.orep-test", response);
                     insertFlag = true;
 //                        }
 //                    }
@@ -112,7 +105,7 @@ public class CheckEvent {
 //                            System.out.println("Produced to kafka with topic: " + kafkaTopic);
                     BaseQuery baseQuery = new BaseQuery(tableName, databaseName, "update", updateRowsEventV2.getHeader().getTimestamp());
                     String response = UpdateQuery.buildResponse(updateRowsEventV2, baseQuery);
-                    KafkaUtils.sendMessage("com.paisabzaar.core.open-replicator-test", response);
+                    KafkaUtils.sendMessage("com.paisabazaar.core.orep-test", response);
                     insertFlag = true;
 //                        }
 //                    }
@@ -132,7 +125,7 @@ public class CheckEvent {
 //                            System.out.println("Produced to kafka with topic: " + kafkaTopic);
                     BaseQuery baseQuery = new BaseQuery(tableName, databaseName, "delete", event.getHeader().getTimestamp());
                     String response = new InsertDeleteQuery().buildResponse(deleteRowsEvent, baseQuery);
-                    KafkaUtils.sendMessage("com.paisabzaar.core.open-replicator-test", response);
+                    KafkaUtils.sendMessage("com.paisabazaar.core.orep-test", response);
                     insertFlag = true;
 //                        }
 //                    }
@@ -162,6 +155,6 @@ public class CheckEvent {
         schemaMap.fillTableWiseSchema(queryEvent.getDatabaseName().toString(), tableName);
         baseQuery = new BaseQuery(tableName, databaseName, create, event.getHeader().getTimestamp());
         String response = AlterCreateRenameQuery.buildResponse(queryEvent, baseQuery);
-        KafkaUtils.sendMessage("com.paisabzaar.core.open-replicator-test-ddl", response);
+        KafkaUtils.sendMessage("com.paisabazaar.core.orep-test-ddl", response);
     }
 }

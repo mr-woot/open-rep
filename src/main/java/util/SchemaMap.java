@@ -1,6 +1,8 @@
 package util;
 
 import com.google.code.or.common.glossary.Column;
+import com.google.code.or.common.glossary.column.StringColumn;
+import com.google.gson.Gson;
 import conn.DataSource;
 import model.BaseQuery;
 import model.SchemaMapBean;
@@ -12,6 +14,7 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.ListIterator;
 
 /**
  * Contributed By: Tushar Mudgal
@@ -36,9 +39,13 @@ public class SchemaMap {
 
     public static JSONObject getColumnsMap(ArrayList tableSchema, List<Column> columns) {
         JSONObject dataObject = new JSONObject();
+        System.out.println(new Gson().toJsonTree(columns).getAsJsonObject());
+        Gson g = new Gson();
         for (int i = 0; i < columns.size(); i++) {
             SchemaMapBean data = (SchemaMapBean) tableSchema.get(i);
-            Object value = columns.get(i);
+            Object val = columns.get(i).getValue();
+            String value = new Gson().toJson(val);
+//            dataObject.put(data.columnName, columns.get(i).getValue());
             dataObject.put(data.columnName, value);
         }
         return dataObject;
